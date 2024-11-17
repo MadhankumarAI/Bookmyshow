@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Seat Booking</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .screen {
+            background: #444;
+            height: 70px;
+            width: 100%;
+            margin: 15px 0;
+            transform: rotateX(-45deg);
+            box-shadow: 0 3px 10px rgba(255,255,255,0.7);
+            text-align: center;
+            color: white;
+            line-height: 70px;
+        }
+        
+        .seat-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        .seat {
+            width: 35px;
+            height: 35px;
+            background: #444;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .seat:hover {
+            transform: scale(1.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .seat.selected {
+            background: #ff4444;
+        }
+        
+        .seat.booked {
+            background: #222;
+            cursor: not-allowed;
+        }
+        
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Movie Seat Booking</h1>
+        <div class="screen">SCREEN</div>
+        
+        <div class="seat-container">
+            <!-- Generate 8 rows with 10 seats each -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const seatContainer = document.querySelector('.seat-container');
+                    
+                    for (let row = 0; row < 8; row++) {
+                        const rowDiv = document.createElement('div');
+                        rowDiv.className = 'row';
+                        
+                        for (let seat = 0; seat < 10; seat++) {
+                            const seatDiv = document.createElement('div');
+                            seatDiv.className = 'seat';
+                            seatDiv.id = `${String.fromCharCode(65 + row)}${seat + 1}`;
+                            seatDiv.textContent = `${String.fromCharCode(65 + row)}${seat + 1}`;
+                            
+                            seatDiv.addEventListener('click', function() {
+                                if (!this.classList.contains('booked')) {
+                                    this.classList.toggle('selected');
+                                    bookSeat(this.id);
+                                }
+                            });
+                            
+                            rowDiv.appendChild(seatDiv);
+                        }
+                        
+                        seatContainer.appendChild(rowDiv);
+                    }
+                });
+                
+                function bookSeat(seatId) {
+                    fetch('/book_seat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            seat_number: seatId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const seat = document.getElementById(seatId);
+                            seat.classList.remove('selected');
+                            seat.classList.add('booked');
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while booking the seat');
+                    });
+                }
+            </script>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #444;"></div>
+                <span>Available</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ff4444;"></div>
+                <span>Selected</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #222;"></div>
+                <span>Booked</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
